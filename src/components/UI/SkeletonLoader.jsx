@@ -1,4 +1,4 @@
-export function SkeletonCard({ className = "" }) {
+﻿export function SkeletonCard({ className = "" }) {
   return (
     <div className={`animate-pulse ${className}`}>
       <div className="h-32 w-full bg-white/20 rounded-3xl mb-4"></div>
@@ -129,6 +129,63 @@ export function SkeletonWeatherPanel() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+export function SkeletonMapPanel() {
+  const meshGradient = `
+    radial-gradient(circle at 20% 30%, rgba(135, 206, 235, 0.7) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(30, 144, 255, 0.65) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(135, 206, 235, 0.68) 0%, rgba(30, 144, 255, 0.7) 100%)
+  `;
+
+  return (
+    <section
+      className="flex flex-col h-full relative"
+      style={{
+        background: 'transparent',
+        fontFamily: 'Open Sans, sans-serif',
+        paddingTop: '2rem',
+        paddingBottom: '2rem',
+      }}
+    >
+      {}
+      <div
+        className="absolute top-0 left-0 w-full flex flex-col items-center justify-center animate-pulse"
+        style={{
+          fontFamily: 'Open Sans, sans-serif',
+          background: 'transparent',
+          paddingTop: '2rem',
+          paddingBottom: '1rem',
+          zIndex: 30,
+        }}
+      >
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="w-7 h-7 bg-blue-500/30 rounded"></div>
+          <div className="h-7 w-40 bg-blue-500/30 rounded"></div>
+        </div>
+      </div>
+
+      {}
+      <div
+        className="flex-1 relative animate-pulse"
+        style={{
+          background: meshGradient,
+          borderRadius: '2rem',
+          margin: '100px 20px 20px 20px',
+          minHeight: '400px',
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-16 w-16 bg-white/30 rounded-full"></div>
+        </div>
+      </div>
+
+      {}
+      <div className="px-5 mt-4 animate-pulse">
+        <div className="h-12 w-full bg-white/30 rounded-2xl"></div>
       </div>
     </section>
   );

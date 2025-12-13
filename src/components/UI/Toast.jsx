@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
 export function Toast({ message, type = 'info', onClose, duration = 3000 }) {
   useEffect(() => {
-    if (duration) {
-      const timer = setTimeout(onClose, duration);
+    if (duration && onClose) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
       return () => clearTimeout(timer);
     }
-  }, [duration, onClose]);
+    
+  }, [duration]); 
 
   const config = {
     success: {
@@ -31,9 +34,10 @@ export function Toast({ message, type = 'info', onClose, duration = 3000 }) {
 
   return (
     <div 
-      className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown"
+      className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown"
       style={{
-        animation: 'slideDown 0.3s ease-out'
+        animation: 'slideDown 0.3s ease-out',
+        position: 'absolute' 
       }}
     >
       <div 
@@ -81,7 +85,7 @@ export function ToastContainer() {
   }, []);
 
   return (
-    <>
+    <div style={{ position: 'relative', width: '100%', height: 0, zIndex: 9999 }}>
       {toasts.map(toast => (
         <Toast
           key={toast.id}
@@ -90,7 +94,7 @@ export function ToastContainer() {
           onClose={() => removeToast(toast.id)}
         />
       ))}
-    </>
+    </div>
   );
 }
 
