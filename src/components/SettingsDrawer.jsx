@@ -1,5 +1,7 @@
-import { X } from 'lucide-react';
-import ToggleSwitch from './Toggle3D.jsx';
+import SettingsHeader from './settings/SettingsHeader';
+import SettingsThemeSection from './settings/SettingsThemeSection';
+import SettingsToggleSection from './settings/SettingsToggleSection';
+import SettingsTempUnitSection from './settings/SettingsTempUnitSection';
 
 export default function SettingsDrawer({
   isDrawerOpen,
@@ -17,13 +19,14 @@ export default function SettingsDrawer({
   currentTheme,
   primaryText,
   secondaryText,
+  gpsEnabled,
+  toggleGPS,
+  heatmapEnabled,
+  setHeatmapEnabled,
 }) {
   
-  const newBlueGradient = 'linear-gradient(180deg, #A1C4FD 0%, #3A8DFF 100%)';
-  const newBlueShadow = `
-    0px 12px 30px rgba(58, 141, 255, 0.4),
-    0px 4px 12px rgba(58, 141, 255, 0.25)
-  `;
+  // Determine if dark mode
+  const isDarkMode = currentTheme.cardBg && currentTheme.cardBg.includes('rgba(30, 30, 50');
   
   return (
     <>
@@ -32,222 +35,132 @@ export default function SettingsDrawer({
           isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{
-          background: 'rgba(58, 141, 255, 0.15)',
+          background: isDarkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(58, 141, 255, 0.15)',
         }}
         onClick={() => setIsDrawerOpen(false)}
       />
       
       <div 
-        className={`absolute inset-y-0 right-0 z-50 w-80 transform transition-transform duration-300 ease-out ${
+        className={`absolute inset-y-0 right-0 z-50 transform transition-transform duration-300 ease-out ${
           isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
         }`} 
         style={{ 
-          background: 'rgba(255, 255, 255, 0.85)',
+          background: currentTheme.cardBgStrong || currentTheme.cardBg || 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(30px)',
           WebkitBackdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: `
-            -10px 0 40px rgba(58, 141, 255, 0.2),
-            -5px 0 20px rgba(58, 141, 255, 0.15)
+          border: `1px solid ${currentTheme.border || (isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.3)')}`,
+          boxShadow: isDarkMode ? `
+            -5px 0 20px rgba(100, 181, 246, 0.15),
+            -2px 0 10px rgba(100, 181, 246, 0.1)
+          ` : `
+            -5px 0 20px rgba(58, 141, 255, 0.15),
+            -2px 0 10px rgba(58, 141, 255, 0.1)
           `,
+          width: 'clamp(280px, 85vw, 320px)',
         }}
       >
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'rgba(58, 141, 255, 0.15)' }}>
-          <h2 
-            className="text-2xl font-bold" 
-            style={{ 
-              color: '#1565c0',
-              fontFamily: 'Open Sans, sans-serif'
-            }}
-          >
-            Cài đặt
-          </h2>
-          <button 
-            onClick={() => setIsDrawerOpen(false)}
-            className="p-2 rounded-full transition-all active:scale-95"
-            style={{
-              background: 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0px 4px 12px rgba(58, 141, 255, 0.2)',
-            }}
-            aria-label="Đóng cài đặt"
-          >
-            <X size={22} color="#1565c0" />
-          </button>
-        </div>
+        <SettingsHeader 
+          setIsDrawerOpen={setIsDrawerOpen}
+          currentTheme={currentTheme}
+          primaryText={primaryText}
+        />
         
-        <div className="overflow-y-auto h-full pb-24 scrollbar-hide">
-          <div className="space-y-6 p-6">
-
+        <div className="overflow-y-auto h-full scrollbar-hide" style={{ paddingBottom: 'clamp(4rem, 12vh, 6rem)' }}>
+          <div style={{ gap: 'clamp(1rem, 3vh, 1.5rem)', padding: 'clamp(1rem, 4vw, 1.5rem)' }} className="flex flex-col">
+            {/* Section: Giao diện */}
             <div>
               <h3 
-                className="text-sm font-bold mb-3 uppercase tracking-wide" 
+                className="font-semibold uppercase tracking-wider"
                 style={{ 
-                  color: '#1565c0',
+                  color: primaryText,
+                  opacity: 0.7,
                   fontFamily: 'Open Sans, sans-serif',
-                  letterSpacing: '1px'
+                  fontSize: 'clamp(0.75rem, 3vw, 0.875rem)',
+                  marginBottom: 'clamp(0.5rem, 2vh, 0.75rem)'
                 }}
               >
                 Giao diện
               </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => {
-                    setThemeMode('manual');
-                    setIsDark(false);
-                  }} 
-                  className={`py-4 text-sm rounded-xl transition-all active:scale-95 ${
-                    themeMode === 'manual' && !isDark ? 'font-bold' : 'font-medium'
-                  }`}
-                  style={{
-                    fontFamily: 'Open Sans, sans-serif',
-                    background: themeMode === 'manual' && !isDark ? newBlueGradient : 'rgba(255, 255, 255, 0.5)',
-                    color: themeMode === 'manual' && !isDark ? '#fff' : primaryText,
-                    backdropFilter: 'blur(10px)',
-                    border: themeMode === 'manual' && !isDark ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: themeMode === 'manual' && !isDark
-                      ? newBlueShadow
-                      : '0px 4px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  ☀️ Sáng
-                </button>
-                <button 
-                  onClick={() => {
-                    setThemeMode('manual');
-                    setIsDark(true);
-                  }} 
-                  className={`py-4 text-sm rounded-xl transition-all active:scale-95 ${
-                    themeMode === 'manual' && isDark ? 'font-bold' : 'font-medium'
-                  }`}
-                  style={{
-                    fontFamily: 'Open Sans, sans-serif',
-                    background: themeMode === 'manual' && isDark ? newBlueGradient : 'rgba(255, 255, 255, 0.5)',
-                    color: themeMode === 'manual' && isDark ? '#fff' : primaryText,
-                    backdropFilter: 'blur(10px)',
-                    border: themeMode === 'manual' && isDark ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: themeMode === 'manual' && isDark
-                      ? newBlueShadow
-                      : '0px 4px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  🌙 Tối
-                </button>
-              </div>
-            </div>
-
-            <div className="border-t" style={{ borderColor: 'rgba(58, 141, 255, 0.15)' }} />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <span 
-                  className="text-base font-semibold block mb-1" 
-                  style={{ 
-                    color: primaryText,
-                    fontFamily: 'Open Sans, sans-serif'
-                  }}
-                >
-                  Âm thanh nền
-                </span>
-                <span 
-                  className="text-sm" 
-                  style={{ 
-                    color: secondaryText,
-                    fontFamily: 'Open Sans, sans-serif'
-                  }}
-                >
-                  Âm thanh thời tiết
-                </span>
-              </div>
-              <ToggleSwitch 
-                checked={soundEnabled} 
-                onChange={setSoundEnabled} 
+              <SettingsThemeSection
+                themeMode={themeMode}
+                setThemeMode={setThemeMode}
+                isDark={isDark}
+                setIsDark={setIsDark}
+                primaryText={primaryText}
+                currentTheme={currentTheme}
               />
             </div>
 
-            <div className="border-t" style={{ borderColor: 'rgba(58, 141, 255, 0.15)' }} />
+            <div className="border-t" style={{ borderColor: currentTheme.border || (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(58, 141, 255, 0.15)') }} />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <span 
-                  className="text-base font-semibold block mb-1" 
-                  style={{ 
-                    color: primaryText,
-                    fontFamily: 'Open Sans, sans-serif'
-                  }}
-                >
-                  Hiệu ứng chuyển động
-                </span>
-                <span 
-                  className="text-sm" 
-                  style={{ 
-                    color: secondaryText,
-                    fontFamily: 'Open Sans, sans-serif'
-                  }}
-                >
-                  Hoạt ảnh & chuyển cảnh
-                </span>
-              </div>
-              <ToggleSwitch 
-                checked={motionEnabled} 
-                onChange={setMotionEnabled} 
+            {/* Section: Đơn vị */}
+            <div>
+              <SettingsTempUnitSection
+                tempUnit={tempUnit}
+                setTempUnit={setTempUnit}
+                primaryText={primaryText}
+                currentTheme={currentTheme}
               />
             </div>
 
-            <div className="border-t" style={{ borderColor: 'rgba(58, 141, 255, 0.15)' }} />
+            <div className="border-t" style={{ borderColor: currentTheme.border || (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(58, 141, 255, 0.15)') }} />
 
+            {/* Section: Tính năng */}
             <div>
               <h3 
-                className="text-sm font-bold mb-3 uppercase tracking-wide" 
+                className="font-semibold uppercase tracking-wider"
                 style={{ 
-                  color: '#1565c0',
+                  color: primaryText,
+                  opacity: 0.7,
                   fontFamily: 'Open Sans, sans-serif',
-                  letterSpacing: '1px'
+                  fontSize: 'clamp(0.75rem, 3vw, 0.875rem)',
+                  marginBottom: 'clamp(0.5rem, 2vh, 0.75rem)'
                 }}
               >
-                Đơn vị nhiệt độ
+                Tính năng
               </h3>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setTempUnit('C')} 
-                  className={`flex-1 py-3 rounded-xl transition-all active:scale-95 ${
-                    tempUnit === 'C' ? 'font-bold' : 'font-medium'
-                  }`}
-                  style={{
-                    fontFamily: 'Open Sans, sans-serif',
-                    background: tempUnit === 'C' ? newBlueGradient : 'rgba(255, 255, 255, 0.5)',
-                    color: tempUnit === 'C' ? '#fff' : primaryText,
-                    backdropFilter: 'blur(10px)',
-                    border: tempUnit === 'C' ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: tempUnit === 'C'
-                      ? newBlueShadow
-                      : '0px 4px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  °C
-                </button>
-                <button 
-                  onClick={() => setTempUnit('F')} 
-                  className={`flex-1 py-3 rounded-xl transition-all active:scale-95 ${
-                    tempUnit === 'F' ? 'font-bold' : 'font-medium'
-                  }`}
-                  style={{
-                    fontFamily: 'Open Sans, sans-serif',
-                    background: tempUnit === 'F' ? newBlueGradient : 'rgba(255, 255, 255, 0.5)',
-                    color: tempUnit === 'F' ? '#fff' : primaryText,
-                    backdropFilter: 'blur(10px)',
-                    border: tempUnit === 'F' ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: tempUnit === 'F'
-                      ? newBlueShadow
-                      : '0px 4px 12px rgba(0, 0, 0, 0.08)',
-                  }}
-                >
-                  °F
-                </button>
+              <div style={{ gap: 'clamp(0.5rem, 2vh, 0.75rem)' }} className="flex flex-col">
+                <SettingsToggleSection
+                  title="Âm thanh nền"
+                  description="Âm thanh thời tiết"
+                  checked={soundEnabled}
+                  onChange={setSoundEnabled}
+                  primaryText={primaryText}
+                  secondaryText={secondaryText}
+                  currentTheme={currentTheme}
+                />
+
+                <SettingsToggleSection
+                  title="Hiệu ứng chuyển động"
+                  description="Hoạt ảnh & chuyển cảnh"
+                  checked={motionEnabled}
+                  onChange={setMotionEnabled}
+                  primaryText={primaryText}
+                  secondaryText={secondaryText}
+                  currentTheme={currentTheme}
+                />
+
+                <SettingsToggleSection
+                  title="Vị trí GPS"
+                  description="Sử dụng vị trí hiện tại của bạn"
+                  checked={gpsEnabled}
+                  onChange={(checked) => toggleGPS(checked)}
+                  primaryText={primaryText}
+                  secondaryText={secondaryText}
+                  currentTheme={currentTheme}
+                />
+
+                <SettingsToggleSection
+                  title="Bản đồ nhiệt độ"
+                  description="Hiển thị heatmap nhiệt độ trên bản đồ"
+                  checked={heatmapEnabled}
+                  onChange={setHeatmapEnabled}
+                  primaryText={primaryText}
+                  secondaryText={secondaryText}
+                  currentTheme={currentTheme}
+                />
               </div>
             </div>
-
           </div>
         </div>
       </div>
