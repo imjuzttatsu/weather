@@ -1,6 +1,6 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://weather-backend-vo7o.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -22,7 +22,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.error('API Error:', error);
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      return Promise.reject(error);
+    }
+    // Log error để debug trên mobile (không chỉ DEV mode)
+    console.error('API Error:', {
+      message: error.message,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return Promise.reject(error);
   }
 );
@@ -66,8 +76,15 @@ export const mapAPI = {
 
   reverseGeocode: async (lat, lon) => {
     return api.get('/map/reverse', { params: { lat, lon } });
+  },
+
+  getTemperatureGrid: async (params, signal) => {
+    return api.get('/map/temperature-grid', { 
+      params,
+      timeout: 60000,
+      signal: signal
+    });
   }
 };
 
 export default api;
-

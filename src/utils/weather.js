@@ -1,4 +1,4 @@
-const WEATHER_CODE_TO_ICON_MAP = {
+﻿const WEATHER_CODE_TO_ICON_MAP = {
   0: 0,
   
   1: 1,
@@ -82,4 +82,3 @@ export const translateWeatherDesc = (desc, descMap) => {
 export const formatDayName = (day, dayMap) => {
   return dayMap[day] || day;
 };
-
