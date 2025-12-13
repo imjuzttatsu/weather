@@ -41,6 +41,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
@@ -60,5 +61,17 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
+  },
+  optimizeDeps: {
+    include: ['react-map-gl', 'mapbox-gl', 'react-frappe-charts', 'frappe-charts'],
+    esbuildOptions: {
+      target: 'es2020'
+    }
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+    alias: {
+      'react-map-gl': 'react-map-gl/dist/esm/index.js'
+    }
   }
 })
