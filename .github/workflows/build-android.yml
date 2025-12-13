@@ -1,0 +1,93 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
+      
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://weather-backend-vo7o.onrender.com/api' }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+        run: npm run build
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 'latest'
+          accept-android-sdk-licenses: true
+      
+      - name: Install Android SDK packages
+        run: |
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+      
+      - name: Sync Capacitor
+        run: npx cap sync android
+      
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x ./gradlew
+      
+      - name: Build APK (Debug - không cần signing)
+        working-directory: android
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace || exit 1
+          echo "Build completed, checking for APK..."
+      
+      - name: Find and verify APK
+        working-directory: android
+        run: |
+          echo "Searching for APK files..."
+          find . -name "*.apk" -type f
+          echo ""
+          echo "Checking debug directory..."
+          if [ -d "app/build/outputs/apk/debug" ]; then
+            ls -lah app/build/outputs/apk/debug/
+            echo ""
+            echo "APK file found:"
+            ls -lah app/build/outputs/apk/debug/*.apk
+          else
+            echo "ERROR: Debug directory not found!"
+            echo "Checking all outputs..."
+            ls -lah app/build/outputs/ || echo "Outputs directory not found"
+            exit 1
+          fi
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
