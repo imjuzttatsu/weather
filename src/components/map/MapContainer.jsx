@@ -33,6 +33,8 @@ export default function MapContainer({
   const [mapInstance, setMapInstance] = useState(null);
   
   const isDraggingRef = useRef(false);
+  const lastMapCenterRef = useRef(null);
+  const isUserInteractingRef = useRef(false);
 
   const glassStyle = {
     background: 'rgba(255, 255, 255, 0.85)',
@@ -50,18 +52,25 @@ export default function MapContainer({
 
   useEffect(() => {
     if (mapCenter && mapCenter[0] && mapCenter[1]) {
-      setViewState(prev => ({
-        ...prev,
-        longitude: mapCenter[1],
-        latitude: mapCenter[0],
-      }));
+      const centerKey = `${mapCenter[0]}_${mapCenter[1]}`;
+      const lastKey = lastMapCenterRef.current ? `${lastMapCenterRef.current[0]}_${lastMapCenterRef.current[1]}` : null;
       
-      if (mapInstance) {
-        mapInstance.flyTo({
-          center: [mapCenter[1], mapCenter[0]],
-          duration: 800,
-          essential: true
-        });
+      if (centerKey !== lastKey) {
+        setViewState(prev => ({
+          ...prev,
+          longitude: mapCenter[1],
+          latitude: mapCenter[0],
+        }));
+        
+        if (mapInstance && !isUserInteractingRef.current) {
+          mapInstance.flyTo({
+            center: [mapCenter[1], mapCenter[0]],
+            duration: 600,
+            essential: true
+          });
+        }
+        
+        lastMapCenterRef.current = mapCenter;
       }
     }
   }, [mapCenter, mapInstance]);
@@ -146,11 +155,12 @@ export default function MapContainer({
             }}
             onDragStart={() => {
               isDraggingRef.current = true;
+              isUserInteractingRef.current = true;
             }}
             onDragEnd={() => {
-              // Delay reset de tranh click ngay sau khi tha
               setTimeout(() => {
                 isDraggingRef.current = false;
+                isUserInteractingRef.current = false;
               }, 100);
             }}
             onClick={handleClick}

@@ -39,14 +39,18 @@ export default function MapPanel({
   const [markerTemperature, setMarkerTemperature] = useState(null);
   const mapRef = useRef(null);
   const toast = useToast();
+  const isUserClickRef = useRef(false);
 
   useEffect(() => {
+    if (isUserClickRef.current) {
+      return;
+    }
+    
     if (currentLocation && currentLocation.lat && currentLocation.lon) {
       const newCenter = [currentLocation.lat, currentLocation.lon];
       setMapCenter(newCenter);
       setMarkerPosition(newCenter);
       setLocationName(currentLocation.city || 'Unknown');
-      
     }
   }, [currentLocation, shouldRenderMap]);
 
@@ -133,6 +137,8 @@ export default function MapPanel({
     
     if (!lat || !lng) return;
     
+    isUserClickRef.current = true;
+    
     const newCenter = [lat, lng];
     
     setMarkerPosition(newCenter);
@@ -210,10 +216,14 @@ export default function MapPanel({
       mapRef.current.flyTo({
         center: [lng, lat],
         zoom: mapRef.current.getZoom() || 9,
-        duration: 800,
+        duration: 400,
         essential: true
       });
     }
+    
+    setTimeout(() => {
+      isUserClickRef.current = false;
+    }, 1000);
   };
 
   const handlePreviewCardClick = () => {
