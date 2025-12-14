@@ -40,6 +40,7 @@ export default function MapPanel({
   const mapRef = useRef(null);
   const toast = useToast();
   const isUserClickRef = useRef(false);
+  const [skipFlyTo, setSkipFlyTo] = useState(false);
 
   useEffect(() => {
     if (isUserClickRef.current) {
@@ -138,10 +139,24 @@ export default function MapPanel({
     if (!lat || !lng) return;
     
     isUserClickRef.current = true;
+    setSkipFlyTo(true);
     
     const newCenter = [lat, lng];
     
     setMarkerPosition(newCenter);
+    
+    if (mapRef.current) {
+      const currentZoom = mapRef.current.getZoom ? mapRef.current.getZoom() : 9;
+      if (mapRef.current.jumpTo) {
+        mapRef.current.jumpTo({
+          center: [lng, lat],
+          zoom: currentZoom
+        });
+      } else if (mapRef.current.setCenter) {
+        mapRef.current.setCenter([lng, lat]);
+      }
+    }
+    
     setMapCenter(newCenter);
     
     const tempLocationName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
@@ -214,7 +229,8 @@ export default function MapPanel({
     
     setTimeout(() => {
       isUserClickRef.current = false;
-    }, 1000);
+      setSkipFlyTo(false);
+    }, 1500);
   };
 
   const handlePreviewCardClick = () => {
@@ -277,6 +293,7 @@ export default function MapPanel({
           heatmapPoints={heatmapPoints}
           heatmapLoading={heatmapLoading}
           isDark={isDark}
+          skipFlyTo={skipFlyTo}
         />
         
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10000, pointerEvents: 'none' }}>

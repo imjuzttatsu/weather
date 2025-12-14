@@ -20,6 +20,7 @@ export default function MapContainer({
   heatmapPoints = [],
   heatmapLoading = false,
   isDark = false,
+  skipFlyTo = false,
 }) {
   const [viewState, setViewState] = useState({
     longitude: mapCenter[1] || 105.8342,
@@ -52,11 +53,15 @@ export default function MapContainer({
   };
 
   useEffect(() => {
+    if (skipFlyTo || isUserInteractingRef.current || isMovingRef.current) {
+      return;
+    }
+    
     if (mapCenter && mapCenter[0] && mapCenter[1]) {
       const centerKey = `${mapCenter[0]}_${mapCenter[1]}`;
       const lastKey = lastMapCenterRef.current ? `${lastMapCenterRef.current[0]}_${lastMapCenterRef.current[1]}` : null;
       
-      if (centerKey !== lastKey && !isUserInteractingRef.current && !isMovingRef.current) {
+      if (centerKey !== lastKey) {
         setViewState(prev => ({
           ...prev,
           longitude: mapCenter[1],
@@ -74,7 +79,7 @@ export default function MapContainer({
         lastMapCenterRef.current = mapCenter;
       }
     }
-  }, [mapCenter, mapInstance]);
+  }, [mapCenter, mapInstance, skipFlyTo]);
 
   useEffect(() => {
     if (mapInstance && mapRef) {
