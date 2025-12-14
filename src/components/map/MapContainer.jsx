@@ -20,7 +20,6 @@ export default function MapContainer({
   heatmapPoints = [],
   heatmapLoading = false,
   isDark = false,
-  skipFlyTo = false,
 }) {
   const [viewState, setViewState] = useState({
     longitude: mapCenter[1] || 105.8342,
@@ -36,7 +35,6 @@ export default function MapContainer({
   const isDraggingRef = useRef(false);
   const lastMapCenterRef = useRef(null);
   const isUserInteractingRef = useRef(false);
-  const isMovingRef = useRef(false);
 
   const glassStyle = {
     background: 'rgba(255, 255, 255, 0.85)',
@@ -53,10 +51,6 @@ export default function MapContainer({
   };
 
   useEffect(() => {
-    if (skipFlyTo || isUserInteractingRef.current || isMovingRef.current) {
-      return;
-    }
-    
     if (mapCenter && mapCenter[0] && mapCenter[1]) {
       const centerKey = `${mapCenter[0]}_${mapCenter[1]}`;
       const lastKey = lastMapCenterRef.current ? `${lastMapCenterRef.current[0]}_${lastMapCenterRef.current[1]}` : null;
@@ -68,7 +62,7 @@ export default function MapContainer({
           latitude: mapCenter[0],
         }));
         
-        if (mapInstance) {
+        if (mapInstance && !isUserInteractingRef.current) {
           mapInstance.flyTo({
             center: [mapCenter[1], mapCenter[0]],
             duration: 600,
@@ -79,7 +73,7 @@ export default function MapContainer({
         lastMapCenterRef.current = mapCenter;
       }
     }
-  }, [mapCenter, mapInstance, skipFlyTo]);
+  }, [mapCenter, mapInstance]);
 
   useEffect(() => {
     if (mapInstance && mapRef) {
@@ -156,30 +150,18 @@ export default function MapContainer({
         <>
           <MapGL
             {...viewState}
-            onMoveStart={() => {
-              isMovingRef.current = true;
-              isUserInteractingRef.current = true;
-            }}
             onMove={(evt) => {
               setViewState(evt.viewState);
-            }}
-            onMoveEnd={() => {
-              setTimeout(() => {
-                isMovingRef.current = false;
-                isUserInteractingRef.current = false;
-              }, 200);
             }}
             onDragStart={() => {
               isDraggingRef.current = true;
               isUserInteractingRef.current = true;
-              isMovingRef.current = true;
             }}
             onDragEnd={() => {
               setTimeout(() => {
                 isDraggingRef.current = false;
                 isUserInteractingRef.current = false;
-                isMovingRef.current = false;
-              }, 200);
+              }, 100);
             }}
             onClick={handleClick}
             onLoad={handleMapLoad}

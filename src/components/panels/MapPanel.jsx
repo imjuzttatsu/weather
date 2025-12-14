@@ -40,20 +40,18 @@ export default function MapPanel({
   const mapRef = useRef(null);
   const toast = useToast();
   const isUserClickRef = useRef(false);
-  const lastUserClickTimeRef = useRef(0);
-  const [skipFlyTo, setSkipFlyTo] = useState(false);
 
   useEffect(() => {
-    const timeSinceLastClick = Date.now() - lastUserClickTimeRef.current;
-    if (isUserClickRef.current || timeSinceLastClick < 2000) {
+    if (isUserClickRef.current) {
       return;
     }
     
     if (currentLocation && currentLocation.lat && currentLocation.lon) {
       const newCenter = [currentLocation.lat, currentLocation.lon];
-      const currentCenterKey = `${mapCenter[0]}_${mapCenter[1]}`;
-      const newCenterKey = `${newCenter[0]}_${newCenter[1]}`;
+      const currentCenterKey = `${Math.round(mapCenter[0] * 10000)}_${Math.round(mapCenter[1] * 10000)}`;
+      const newCenterKey = `${Math.round(newCenter[0] * 10000)}_${Math.round(newCenter[1] * 10000)}`;
       
+      // Chỉ update nếu thực sự khác
       if (currentCenterKey !== newCenterKey) {
         setMapCenter(newCenter);
         setMarkerPosition(newCenter);
@@ -146,25 +144,12 @@ export default function MapPanel({
     if (!lat || !lng) return;
     
     isUserClickRef.current = true;
-    lastUserClickTimeRef.current = Date.now();
-    setSkipFlyTo(true);
     
     const newCenter = [lat, lng];
     
+    // Update marker ngay lập tức
     setMarkerPosition(newCenter);
     setMapCenter(newCenter);
-    
-    if (mapRef.current) {
-      const currentZoom = mapRef.current.getZoom ? mapRef.current.getZoom() : 9;
-      if (mapRef.current.jumpTo) {
-        mapRef.current.jumpTo({
-          center: [lng, lat],
-          zoom: currentZoom
-        });
-      } else if (mapRef.current.setCenter) {
-        mapRef.current.setCenter([lng, lat]);
-      }
-    }
     
     const tempLocationName = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     setLocationName(tempLocationName);
@@ -179,6 +164,7 @@ export default function MapPanel({
       }
     }
     
+    // Load data trước
     Promise.all([
       weatherAPI.getCurrentWeather(null, lat, lng).catch(() => null),
       mapAPI.reverseGeocode(lat, lng).catch(() => null)
@@ -224,20 +210,41 @@ export default function MapPanel({
           }
         });
         
-        if (onLocationChange) {
-          onLocationChange(lat, lng);
-        }
+        // CHỈ GỌI onLocationChange SAU KHI DATA ĐÃ LOAD XONG
+        // Đợi thêm 200ms để đảm bảo marker đã ổn định
+        setTimeout(() => {
+          if (onLocationChange) {
+            onLocationChange(lat, lng);
+          }
+          // Reset flag sau khi đã update xong
+          setTimeout(() => {
+            isUserClickRef.current = false;
+          }, 1000);
+        }, 200);
+      } else {
+        // Nếu không có data, vẫn reset flag sau 2 giây
+        setTimeout(() => {
+          isUserClickRef.current = false;
+        }, 2000);
       }
     }).catch((err) => {
       if (import.meta.env.DEV) {
         console.warn('Error fetching weather/geocode:', err);
       }
+      // Reset flag nếu có lỗi
+      setTimeout(() => {
+        isUserClickRef.current = false;
+      }, 2000);
     });
     
-    setTimeout(() => {
-      isUserClickRef.current = false;
-      setSkipFlyTo(false);
-    }, 2000);
+    if (mapRef.current && mapRef.current.flyTo) {
+      mapRef.current.flyTo({
+        center: [lng, lat],
+        zoom: mapRef.current.getZoom() || 9,
+        duration: 400,
+        essential: true
+      });
+    }
   };
 
   const handlePreviewCardClick = () => {
@@ -300,7 +307,6 @@ export default function MapPanel({
           heatmapPoints={heatmapPoints}
           heatmapLoading={heatmapLoading}
           isDark={isDark}
-          skipFlyTo={skipFlyTo}
         />
         
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10000, pointerEvents: 'none' }}>
